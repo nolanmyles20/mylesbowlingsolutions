@@ -1,0 +1,29 @@
+[
+  {
+    "id": "strike-grip-sack",
+    "name": "The Strike Grip Sack",
+    "price": 20.00,
+    "category": "Accessories",
+    "image": "assets/5D49D1BF-AE9D-4F68-B9C4-6760C078BD00.png",
+    "desc": "Premium grip sack designed to keep your hands dry and consistent. Strike-ready performance every throw.",
+    "squareLink": "#"
+  },
+  {
+    "id": "lucky-grip-sack",
+    "name": "The Lucky Grip Sack",
+    "price": 20.00,
+    "category": "Accessories",
+    "image": "assets/6CFD8160-AD6D-45A3-AE3A-AC0A6948591F.png",
+    "desc": "Bring a little luck to every frame. Reliable grip control with a clean premium feel.",
+    "squareLink": "#"
+  },
+  {
+    "id": "bowling-shammy",
+    "name": "Bowling Shammy",
+    "price": 20.00,
+    "category": "Accessories",
+    "image": "assets/2759440F-4A5F-4DDA-9753-E459A33419AA.jpeg",
+    "desc": "Premium bowling shammy for removing oil and keeping ball reaction consistent.",
+    "squareLink": "#"
+  }
+]
