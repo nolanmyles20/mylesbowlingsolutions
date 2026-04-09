@@ -123,7 +123,9 @@ function renderProducts() {
         <p>${product.desc || ""}</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="addToCart('${product.id}')">Add to Cart</button>
-          <a class="btn btn-secondary" href="${product.squareLink || "#"}">Buy with Square</a>
+          <a class="btn btn-secondary" href="${product.squareLink || "#"}" target="_blank" rel="noopener">
+            Buy with Square
+          </a>
         </div>
       </div>
     </article>
@@ -152,7 +154,7 @@ function renderCart() {
     if (cartEmpty) cartEmpty.style.display = "block";
 
     if (squareCheckoutBtn) {
-      squareCheckoutBtn.href = "#";
+      squareCheckoutBtn.disabled = true;
       squareCheckoutBtn.setAttribute("aria-disabled", "true");
       squareCheckoutBtn.style.pointerEvents = "none";
       squareCheckoutBtn.style.opacity = ".55";
@@ -198,10 +200,57 @@ function renderCart() {
   totalEl.textContent = formatMoney(subtotal);
 
   if (squareCheckoutBtn) {
-    squareCheckoutBtn.href = "#";
+    squareCheckoutBtn.disabled = false;
     squareCheckoutBtn.removeAttribute("aria-disabled");
     squareCheckoutBtn.style.pointerEvents = "";
     squareCheckoutBtn.style.opacity = "";
+  }
+}
+
+/* -------------------------
+   SQUARE CART CHECKOUT
+------------------------- */
+async function checkoutCartWithSquare() {
+  const cart = getCart();
+  if (!cart.length) return;
+
+  const checkoutBtn = document.getElementById("squareCheckoutBtn");
+  const originalText = checkoutBtn ? checkoutBtn.textContent : "";
+
+  try {
+    if (checkoutBtn) {
+      checkoutBtn.disabled = true;
+      checkoutBtn.textContent = "Starting checkout...";
+    }
+
+    const res = await fetch("/.netlify/functions/create-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ items: cart })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || "Checkout failed");
+    }
+
+    if (data.checkoutUrl) {
+      window.location.href = data.checkoutUrl;
+      return;
+    }
+
+    throw new Error("Missing checkout URL");
+  } catch (err) {
+    console.error("Square checkout error:", err);
+    alert("Unable to start Square checkout right now.");
+  } finally {
+    if (checkoutBtn) {
+      checkoutBtn.disabled = false;
+      checkoutBtn.textContent = originalText || "Checkout with Square";
+    }
   }
 }
 
@@ -245,4 +294,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   initHeaderShrink();
   await loadProducts();
   renderCart();
+
+  const checkoutBtn = document.getElementById("squareCheckoutBtn");
+  if (checkoutBtn) {
+    checkoutBtn.addEventListener("click", checkoutCartWithSquare);
+  }
 });
