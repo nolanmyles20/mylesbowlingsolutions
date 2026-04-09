@@ -564,3 +564,36 @@ a{
     grid-template-columns:1fr;
   }
 }
+/* SIMPLE POLICY FOOTER */
+.site-footer{
+  margin-top:60px;
+  padding:30px 20px;
+  text-align:center;
+  background:#d5d5d5;
+  border-top:1px solid rgba(0,0,0,.08);
+}
+
+.footer-links{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:18px;
+  margin-bottom:12px;
+}
+
+.footer-links a{
+  color:#111;
+  text-decoration:none;
+  font-size:.9rem;
+  font-weight:500;
+  transition:.2s;
+}
+
+.footer-links a:hover{
+  text-decoration:underline;
+}
+
+.footer-copy{
+  font-size:.85rem;
+  color:#444;
+}
