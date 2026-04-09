@@ -181,12 +181,25 @@ function initHeaderShrink() {
   const header = document.getElementById("siteHeader");
   if (!header) return;
 
+  let lastScrollY = window.scrollY;
+
   const onScroll = () => {
-    if (window.scrollY > 40) {
-      header.classList.add("scrolled");
-    } else {
+    const currentScrollY = window.scrollY;
+
+    if (currentScrollY <= 0) {
       header.classList.remove("scrolled");
+      header.classList.remove("nav-hidden");
+    } else {
+      header.classList.add("scrolled");
+
+      if (currentScrollY > lastScrollY) {
+        header.classList.add("nav-hidden");
+      } else {
+        header.classList.remove("nav-hidden");
+      }
     }
+
+    lastScrollY = currentScrollY;
   };
 
   onScroll();
