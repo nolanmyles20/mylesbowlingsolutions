@@ -597,3 +597,16 @@ a{
   font-size:.85rem;
   color:#444;
 }
+.section h1{
+  margin-bottom:20px;
+}
+
+.section h3{
+  margin-top:20px;
+  margin-bottom:8px;
+}
+
+.section p{
+  line-height:1.6;
+  margin-bottom:10px;
+}
