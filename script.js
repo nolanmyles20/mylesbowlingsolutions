@@ -177,8 +177,25 @@ function renderCart() {
   }
 }
 
+function initHeaderShrink() {
+  const header = document.getElementById("siteHeader");
+  if (!header) return;
+
+  const onScroll = () => {
+    if (window.scrollY > 40) {
+      header.classList.add("scrolled");
+    } else {
+      header.classList.remove("scrolled");
+    }
+  };
+
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   updateCartCount();
+  initHeaderShrink();
   await loadProducts();
   renderCart();
 });
