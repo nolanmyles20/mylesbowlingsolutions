@@ -59,7 +59,6 @@ a{
   border-bottom:1px solid rgba(0,0,0,.08);
   box-shadow:0 8px 26px rgba(0,0,0,.12);
   transition:
-    padding .22s ease,
     box-shadow .22s ease,
     background .22s ease;
 }
@@ -75,12 +74,6 @@ a{
   align-items:center;
   gap:12px;
   padding:14px 0 16px;
-  transition:padding .22s ease, gap .22s ease;
-}
-
-.site-header.scrolled .header-wrap{
-  padding:8px 0 10px;
-  gap:8px;
 }
 
 .brand{
@@ -99,13 +92,18 @@ a{
   width:100%;
   height:auto;
   display:block;
+  transform-origin:center top;
+  transform:scaleY(1);
   filter:drop-shadow(0 8px 16px rgba(0,0,0,.22));
-  transition:max-height .22s ease, filter .22s ease, transform .22s ease;
+  transition:
+    transform .28s ease,
+    filter .28s ease;
 }
 
+/* shrink logo to 50% height when scrolled */
 .site-header.scrolled .full-logo img{
-  transform:scale(.92);
-  filter:drop-shadow(0 6px 12px rgba(0,0,0,.18));
+  transform:scaleY(.5);
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.16));
 }
 
 .nav{
@@ -115,6 +113,15 @@ a{
   gap:12px;
   flex-wrap:wrap;
   padding:0 16px 6px;
+  max-height:220px;
+  opacity:1;
+  overflow:hidden;
+  transform:translateY(0);
+  transition:
+    max-height .28s ease,
+    opacity .22s ease,
+    transform .22s ease,
+    padding .22s ease;
 }
 
 .nav a{
@@ -135,8 +142,14 @@ a{
     0 8px 18px rgba(0,0,0,.10);
 }
 
-.site-header.scrolled .nav a{
-  padding:11px 20px;
+/* hide nav while scrolling down */
+.site-header.nav-hidden .nav{
+  max-height:0;
+  opacity:0;
+  transform:translateY(-12px);
+  padding-top:0;
+  padding-bottom:0;
+  pointer-events:none;
 }
 
 /* HERO */
