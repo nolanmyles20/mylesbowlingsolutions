@@ -17,13 +17,22 @@
     "desc": "Bring a little luck to every frame. Reliable grip control with a clean premium feel.",
     "squareLink": "#"
   },
-  {
-    "id": "bowling-shammy",
-    "name": "Bowling Shammy",
+   {
+    "id": "lucky-grip-sack",
+    "name": "The Lucky Grip Sack",
     "price": 20.00,
     "category": "Accessories",
-    "image": "assets/2759440F-4A5F-4DDA-9753-E459A33419AA.jpeg",
-    "desc": "Premium bowling shammy for removing oil and keeping ball reaction consistent.",
+    "image": "assets/6CFD8160-AD6D-45A3-AE3A-AC0A6948591F.png",
+    "desc": "Bring a little luck to every frame. Reliable grip control with a clean premium feel.",
+    "squareLink": "#"
+  },
+  {
+    "id": "4ball-holder",
+    "name": "Bowling 4Ball Holder",
+    "price": 40.00,
+    "category": "Accessories",
+    "image": "assets/IMG_7889.jpeg",
+    "desc": "Premium bowling ball holder for table top or under ball return.",
     "squareLink": "#"
   }
 ]
