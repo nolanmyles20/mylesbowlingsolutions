@@ -498,3 +498,27 @@ a{
     grid-template-columns:1fr;
   }
 }
+/* FULL WIDTH LOGO HEADER */
+.full-logo {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.full-logo img {
+  width: 100%;
+  max-width: 320px;
+  height: auto;
+}
+
+/* STACK HEADER CLEANLY */
+.header-wrap {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+/* CENTER NAV UNDER LOGO */
+.nav {
+  justify-content: center;
+}
