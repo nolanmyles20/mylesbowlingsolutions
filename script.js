@@ -1,45 +1,16 @@
 const CART_KEY = "mbs_cart_v1";
+let PRODUCTS = [];
 
-const PRODUCTS = [
-  {
-    id: "lane-display-upgrade",
-    name: "Lane Display Upgrade",
-    price: 249.00,
-    category: "Software",
-    image: "assets/06309F0A-B867-462A-8ED0-E043CD47B2AF.png",
-    desc: "Custom scoring display and lane presentation package.",
-    squareLink: "#"
-  },
-  {
-    id: "league-management-kit",
-    name: "League Management Kit",
-    price: 399.00,
-    category: "Solutions",
-    image: "assets/06309F0A-B867-462A-8ED0-E043CD47B2AF.png",
-    desc: "League tools for roster management, tracking, and reporting.",
-    squareLink: "#"
-  },
-  {
-    id: "brackets-payouts-suite",
-    name: "Brackets & Payouts Suite",
-    price: 199.00,
-    category: "Software",
-    image: "assets/06309F0A-B867-462A-8ED0-E043CD47B2AF.png",
-    desc: "Tournament bracket and payout workflow package for centers.",
-    squareLink: "#"
-  }
-];
-
-function getCart(){
+function getCart() {
   return JSON.parse(localStorage.getItem(CART_KEY) || "[]");
 }
 
-function saveCart(cart){
+function saveCart(cart) {
   localStorage.setItem(CART_KEY, JSON.stringify(cart));
   updateCartCount();
 }
 
-function updateCartCount(){
+function updateCartCount() {
   const cart = getCart();
   const count = cart.reduce((sum, item) => sum + item.qty, 0);
   document.querySelectorAll("[data-cart-count]").forEach(el => {
@@ -47,23 +18,42 @@ function updateCartCount(){
   });
 }
 
-function addToCart(id){
+function formatMoney(value) {
+  return `$${Number(value).toFixed(2)}`;
+}
+
+async function loadProducts() {
+  try {
+    const res = await fetch("data/products.json");
+    if (!res.ok) throw new Error("Failed to load products.json");
+    PRODUCTS = await res.json();
+    renderProducts();
+  } catch (err) {
+    console.error("Error loading products:", err);
+    const grid = document.getElementById("productGrid");
+    if (grid) {
+      grid.innerHTML = `<p>Unable to load products right now.</p>`;
+    }
+  }
+}
+
+function addToCart(id) {
   const product = PRODUCTS.find(p => p.id === id);
-  if(!product) return;
+  if (!product) return;
 
   const cart = getCart();
   const existing = cart.find(item => item.id === id);
 
-  if(existing){
+  if (existing) {
     existing.qty += 1;
   } else {
     cart.push({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: Number(product.price),
       image: product.image,
       qty: 1,
-      squareLink: product.squareLink
+      squareLink: product.squareLink || "#"
     });
   }
 
@@ -71,34 +61,32 @@ function addToCart(id){
   alert(`${product.name} added to cart`);
 }
 
-function changeQty(id, delta){
+function changeQty(id, delta) {
   const cart = getCart();
   const item = cart.find(p => p.id === id);
-  if(!item) return;
+  if (!item) return;
 
   item.qty += delta;
-  if(item.qty <= 0){
+
+  if (item.qty <= 0) {
     const next = cart.filter(p => p.id !== id);
     saveCart(next);
   } else {
     saveCart(cart);
   }
+
   renderCart();
 }
 
-function removeFromCart(id){
+function removeFromCart(id) {
   const cart = getCart().filter(item => item.id !== id);
   saveCart(cart);
   renderCart();
 }
 
-function formatMoney(value){
-  return `$${value.toFixed(2)}`;
-}
-
-function renderProducts(){
+function renderProducts() {
   const grid = document.getElementById("productGrid");
-  if(!grid) return;
+  if (!grid) return;
 
   grid.innerHTML = PRODUCTS.map(product => `
     <article class="product-card">
@@ -107,37 +95,39 @@ function renderProducts(){
       </div>
       <div class="product-body">
         <div class="product-meta">
-          <span class="badge">${product.category}</span>
+          <span class="badge">${product.id === "strike-grip-sack" ? "Best Seller" : product.category}</span>
           <span class="price">${formatMoney(product.price)}</span>
         </div>
         <h3>${product.name}</h3>
         <p>${product.desc}</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="addToCart('${product.id}')">Add to Cart</button>
-          <a class="btn btn-secondary" href="${product.squareLink}">Buy with Square</a>
+          <a class="btn btn-secondary" href="${product.squareLink || "#"}">Buy with Square</a>
         </div>
       </div>
     </article>
   `).join("");
 }
 
-function renderCart(){
+function renderCart() {
   const list = document.getElementById("cartList");
   const subtotalEl = document.getElementById("cartSubtotal");
   const totalEl = document.getElementById("cartTotal");
   const cartEmpty = document.getElementById("cartEmpty");
   const squareCheckoutBtn = document.getElementById("squareCheckoutBtn");
 
-  if(!list || !subtotalEl || !totalEl) return;
+  if (!list || !subtotalEl || !totalEl) return;
 
   const cart = getCart();
 
-  if(cart.length === 0){
+  if (cart.length === 0) {
     list.innerHTML = "";
     subtotalEl.textContent = "$0.00";
     totalEl.textContent = "$0.00";
-    if(cartEmpty) cartEmpty.style.display = "block";
-    if(squareCheckoutBtn){
+
+    if (cartEmpty) cartEmpty.style.display = "block";
+
+    if (squareCheckoutBtn) {
       squareCheckoutBtn.href = "#";
       squareCheckoutBtn.setAttribute("aria-disabled", "true");
       squareCheckoutBtn.style.pointerEvents = "none";
@@ -146,12 +136,12 @@ function renderCart(){
     return;
   }
 
-  if(cartEmpty) cartEmpty.style.display = "none";
+  if (cartEmpty) cartEmpty.style.display = "none";
 
   let subtotal = 0;
 
   list.innerHTML = cart.map(item => {
-    const line = item.price * item.qty;
+    const line = Number(item.price) * Number(item.qty);
     subtotal += line;
 
     return `
@@ -179,7 +169,7 @@ function renderCart(){
   subtotalEl.textContent = formatMoney(subtotal);
   totalEl.textContent = formatMoney(subtotal);
 
-  if(squareCheckoutBtn){
+  if (squareCheckoutBtn) {
     squareCheckoutBtn.href = "#";
     squareCheckoutBtn.removeAttribute("aria-disabled");
     squareCheckoutBtn.style.pointerEvents = "";
@@ -187,8 +177,8 @@ function renderCart(){
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
   updateCartCount();
-  renderProducts();
+  await loadProducts();
   renderCart();
 });
