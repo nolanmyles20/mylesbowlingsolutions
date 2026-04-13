@@ -44,6 +44,15 @@
     "desc": "Premium bowling shoe cover.",
     "squareLink": "https://square.link/u/DZVQfM5G"
   },
+     {
+    "id": "lucky-shoe-cover",
+    "name": "All Luck Shoe Cover",
+    "price": 30.00,
+    "category": "Accessories",
+    "image": "assets/E8FDBFCE-F049-4744-A5AF-7AA20BAC5E28.png",
+    "desc": "Premium bowling shoe cover.",
+    "squareLink": "https://square.link/u/DZVQfM5G"
+  },
   {
     "id": "4ball-holder",
     "name": "Bowling 4Ball Holder",
