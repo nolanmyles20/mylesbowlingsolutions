@@ -1,6 +1,9 @@
 const CART_KEY = "mbs_cart_v1";
 let PRODUCTS = [];
 
+const FREE_SHIPPING_THRESHOLD = 75;
+const DEFAULT_SHIPPING = 8.95;
+
 /* -------------------------
    CART HELPERS
 ------------------------- */
@@ -24,6 +27,21 @@ function updateCartCount() {
 
 function formatMoney(value) {
   return `$${Number(value).toFixed(2)}`;
+}
+
+function getShippingAmount(subtotal) {
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  return DEFAULT_SHIPPING;
+}
+
+function getFreeShippingMessage(subtotal) {
+  if (subtotal <= 0) return "";
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    return "Free shipping applied!";
+  }
+
+  const remaining = FREE_SHIPPING_THRESHOLD - subtotal;
+  return `Add ${formatMoney(remaining)} more to unlock free shipping.`;
 }
 
 /* -------------------------
@@ -134,6 +152,7 @@ function renderProducts() {
 function renderCart() {
   const list = document.getElementById("cartList");
   const subtotalEl = document.getElementById("cartSubtotal");
+  const shippingEl = document.getElementById("cartShipping");
   const totalEl = document.getElementById("cartTotal");
   const cartEmpty = document.getElementById("cartEmpty");
   const squareCheckoutBtn = document.getElementById("squareCheckoutBtn");
@@ -142,10 +161,25 @@ function renderCart() {
 
   const cart = getCart();
 
+  let freeShippingBanner = document.getElementById("freeShippingBanner");
+
+  if (!freeShippingBanner && list.parentElement) {
+    freeShippingBanner = document.createElement("div");
+    freeShippingBanner.id = "freeShippingBanner";
+    freeShippingBanner.className = "free-shipping-banner";
+    list.parentElement.insertBefore(freeShippingBanner, list);
+  }
+
   if (cart.length === 0) {
     list.innerHTML = "";
     subtotalEl.textContent = "$0.00";
+    if (shippingEl) shippingEl.textContent = "$0.00";
     totalEl.textContent = "$0.00";
+
+    if (freeShippingBanner) {
+      freeShippingBanner.style.display = "none";
+      freeShippingBanner.textContent = "";
+    }
 
     if (cartEmpty) cartEmpty.style.display = "block";
 
@@ -192,8 +226,25 @@ function renderCart() {
     `;
   }).join("");
 
+  const shipping = getShippingAmount(subtotal);
+  const total = subtotal + shipping;
+  const bannerMessage = getFreeShippingMessage(subtotal);
+
   subtotalEl.textContent = formatMoney(subtotal);
-  totalEl.textContent = formatMoney(subtotal);
+
+  if (shippingEl) {
+    shippingEl.textContent = shipping > 0
+      ? formatMoney(shipping)
+      : "Free Shipping Applied";
+  }
+
+  totalEl.textContent = formatMoney(total);
+
+  if (freeShippingBanner) {
+    freeShippingBanner.style.display = "block";
+    freeShippingBanner.textContent = bannerMessage;
+    freeShippingBanner.classList.toggle("qualified", subtotal >= FREE_SHIPPING_THRESHOLD);
+  }
 
   if (squareCheckoutBtn) {
     squareCheckoutBtn.disabled = false;
