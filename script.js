@@ -64,8 +64,7 @@ function addToCart(id) {
       name: product.name,
       price: Number(product.price),
       image: product.image,
-      qty: 1,
-      squareLink: product.squareLink || "#"
+      qty: 1
     });
   }
 
@@ -123,9 +122,6 @@ function renderProducts() {
         <p>${product.desc || ""}</p>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
           <button class="btn btn-primary" onclick="addToCart('${product.id}')">Add to Cart</button>
-          <a class="btn btn-secondary" href="${product.squareLink || "#"}" target="_blank" rel="noopener">
-            Buy with Square
-          </a>
         </div>
       </div>
     </article>
