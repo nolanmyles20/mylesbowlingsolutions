@@ -38,15 +38,16 @@ function getProductPriceCents(product) {
   const price = Math.round(Number(product.price || product.basePrice || 0) * 100);
 
   if (price <= 0) {
-    throw new Error(`Missing price for ${product.name || product.title || product.id}`);
+    throw new Error(`Missing price for ${product.name || product.id}`);
   }
 
   return price;
 }
 
+// 🔥 SHIPPING LOGIC
 function getShippingCents(subtotalCents) {
-  if (subtotalCents >= 7500) return 0; // free over $75
-  return 895;
+  if (subtotalCents >= 7500) return 0; // FREE over $75
+  return 895; // $8.95 default
 }
 
 exports.handler = async (event) => {
@@ -93,7 +94,7 @@ exports.handler = async (event) => {
       subtotalCents += priceCents * qty;
 
       return {
-        name: String(product.name || product.title || product.id).slice(0, 120),
+        name: String(product.name || product.id).slice(0, 120),
         quantity: qty.toString(),
         base_price_money: {
           amount: priceCents,
@@ -102,6 +103,7 @@ exports.handler = async (event) => {
       };
     });
 
+    // 🚚 SHIPPING ITEM (always shown)
     const shippingCents = getShippingCents(subtotalCents);
 
     if (shippingCents > 0) {
@@ -111,6 +113,16 @@ exports.handler = async (event) => {
         note: "Flat rate shipping",
         base_price_money: {
           amount: shippingCents,
+          currency: "USD"
+        }
+      });
+    } else {
+      line_items.push({
+        name: "Free Shipping Applied",
+        quantity: "1",
+        note: "Order qualified for free shipping",
+        base_price_money: {
+          amount: 0,
           currency: "USD"
         }
       });
