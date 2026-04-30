@@ -223,12 +223,17 @@ async function checkoutCartWithSquare() {
       checkoutBtn.textContent = "Starting checkout...";
     }
 
+    const lines = cart.map(item => ({
+      id: item.id,
+      qty: Math.max(1, parseInt(item.qty || 1, 10))
+    }));
+
     const res = await fetch("/.netlify/functions/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ items: cart })
+      body: JSON.stringify({ lines })
     });
 
     const data = await res.json();
@@ -237,8 +242,10 @@ async function checkoutCartWithSquare() {
       throw new Error(data.error || "Checkout failed");
     }
 
-    if (data.checkoutUrl) {
-      window.location.href = data.checkoutUrl;
+    const checkoutUrl = data.url || data.checkoutUrl;
+
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
       return;
     }
 
