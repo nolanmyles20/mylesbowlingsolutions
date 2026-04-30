@@ -224,7 +224,7 @@ async function checkoutCartWithSquare() {
       qty: Math.max(1, parseInt(item.qty || 1, 10))
     }));
 
-    const res = await fetch("/.netlify/functions/create-checkout", {
+    const res = await fetch("https://cart.mylesbowlingsolutions.com/.netlify/functions/create-checkout", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
