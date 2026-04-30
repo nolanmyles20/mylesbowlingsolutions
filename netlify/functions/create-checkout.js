@@ -1,10 +1,11 @@
 const allowedOrigins = [
-  "https://mylesbowlingsystems.com",
-  "https://www.mylesbowlingsystems.com"
+  "https://mylesbowlingsolutions.com",
+  "https://www.mylesbowlingsolutions.com",
+  "https://cart.mylesbowlingsolutions.com"
 ];
 
 const PRODUCT_URLS = [
-  "https://www.mylesbowlingsystems.com/products.json"
+  "https://www.mylesbowlingsolutions.com/data/products.json"
 ];
 
 function getHeaders(event) {
@@ -12,7 +13,7 @@ function getHeaders(event) {
   return {
     "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
       ? origin
-      : "https://mylesbowlingsystems.com",
+      : "https://mylesbowlingsolutions.com",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Content-Type": "application/json"
@@ -33,22 +34,11 @@ async function loadProducts() {
   return allProducts;
 }
 
-function getProductPriceCents(product, item) {
-  let price = Math.round(Number(product.basePrice || 0) * 100);
-
-  const options = item.options || {};
-  const variantKey = Object.values(options).join(" / ");
-
-  if (
-    product.variant_price_cents &&
-    variantKey &&
-    product.variant_price_cents[variantKey]
-  ) {
-    price = Number(product.variant_price_cents[variantKey]);
-  }
+function getProductPriceCents(product) {
+  const price = Math.round(Number(product.price || product.basePrice || 0) * 100);
 
   if (price <= 0) {
-    throw new Error(`Missing price for ${product.title || product.id}`);
+    throw new Error(`Missing price for ${product.name || product.title || product.id}`);
   }
 
   return price;
@@ -98,20 +88,13 @@ exports.handler = async (event) => {
       }
 
       const qty = Math.max(1, parseInt(item.qty || 1, 10));
-      const priceCents = getProductPriceCents(product, item);
+      const priceCents = getProductPriceCents(product);
 
       subtotalCents += priceCents * qty;
 
-      const optionText = item.options
-        ? Object.entries(item.options)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(", ")
-        : "";
-
       return {
-        name: String(product.title || product.name || product.id).slice(0, 120),
+        name: String(product.name || product.title || product.id).slice(0, 120),
         quantity: qty.toString(),
-        note: optionText || undefined,
         base_price_money: {
           amount: priceCents,
           currency: "USD"
@@ -148,7 +131,7 @@ exports.handler = async (event) => {
         },
         checkout_options: {
           ask_for_shipping_address: true,
-          redirect_url: "https://www.mylesbowlingsystems.com/ordercomplete.html"
+          redirect_url: "https://www.mylesbowlingsolutions.com/ordercomplete.html"
         }
       })
     });
