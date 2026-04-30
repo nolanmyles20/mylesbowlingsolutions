@@ -610,3 +610,16 @@ a{
   line-height:1.6;
   margin-bottom:10px;
 }
+.free-shipping-banner {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.08);
+  font-weight: 800;
+  text-align: center;
+}
+
+.free-shipping-banner.qualified {
+  background: rgba(45, 255, 120, .12);
+}
