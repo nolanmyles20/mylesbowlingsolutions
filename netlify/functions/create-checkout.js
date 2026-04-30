@@ -45,8 +45,8 @@ function getProductPriceCents(product) {
 }
 
 function getShippingCents(subtotalCents) {
-  if (subtotalCents >= 5000) return 0;
-  return 700;
+  if (subtotalCents >= 7500) return 0; // free over $75
+  return 895;
 }
 
 exports.handler = async (event) => {
