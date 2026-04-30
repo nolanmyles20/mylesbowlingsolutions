@@ -1,65 +1,202 @@
+const allowedOrigins = [
+  "https://mylesbowlingsystems.com",
+  "https://www.mylesbowlingsystems.com"
+];
+
+const PRODUCT_URLS = [
+  "https://www.mylesbowlingsystems.com/products.json"
+];
+
+function getHeaders(event) {
+  const origin = event.headers.origin || event.headers.Origin || "";
+  return {
+    "Access-Control-Allow-Origin": allowedOrigins.includes(origin)
+      ? origin
+      : "https://mylesbowlingsystems.com",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json"
+  };
+}
+
+async function loadProducts() {
+  const allProducts = [];
+
+  for (const url of PRODUCT_URLS) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Could not load products from ${url}`);
+
+    const data = await res.json();
+    if (Array.isArray(data)) allProducts.push(...data);
+  }
+
+  return allProducts;
+}
+
+function getProductPriceCents(product, item) {
+  let price = Math.round(Number(product.basePrice || 0) * 100);
+
+  const options = item.options || {};
+  const variantKey = Object.values(options).join(" / ");
+
+  if (
+    product.variant_price_cents &&
+    variantKey &&
+    product.variant_price_cents[variantKey]
+  ) {
+    price = Number(product.variant_price_cents[variantKey]);
+  }
+
+  if (price <= 0) {
+    throw new Error(`Missing price for ${product.title || product.id}`);
+  }
+
+  return price;
+}
+
+function getShippingCents(subtotalCents) {
+  if (subtotalCents >= 5000) return 0;
+  return 700;
+}
+
 exports.handler = async (event) => {
+  const headers = getHeaders(event);
+
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
+  }
+
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: "Method not allowed" })
+    };
+  }
+
   try {
     const body = JSON.parse(event.body || "{}");
-    const items = body.items || [];
+    const lines = Array.isArray(body.lines) ? body.lines : [];
 
-    if (!items.length) {
+    if (!lines.length) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: "Cart is empty" }),
+        headers,
+        body: JSON.stringify({ error: "Cart is empty" })
       };
     }
 
-    // 🔒 HARD-CODED PRODUCT MAP (SECURE)
-    const PRODUCT_MAP = {
-      "strike-grip-sack": { name: "Strike Grip Sack", price: 2000 },
-      "lucky-grip-sack": { name: "Lucky Grip Sack", price: 2000 },
-      "bowling-shammy": { name: "Bowling Shammy", price: 2000 }
-    };
+    const products = await loadProducts();
 
-    const line_items = items.map(item => {
-      const product = PRODUCT_MAP[item.id];
-      if (!product) throw new Error("Invalid product");
+    let subtotalCents = 0;
+
+    const line_items = lines.map((item) => {
+      const product = products.find(p => p.id === item.id);
+
+      if (!product) {
+        throw new Error(`Invalid product: ${item.id}`);
+      }
+
+      const qty = Math.max(1, parseInt(item.qty || 1, 10));
+      const priceCents = getProductPriceCents(product, item);
+
+      subtotalCents += priceCents * qty;
+
+      const optionText = item.options
+        ? Object.entries(item.options)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(", ")
+        : "";
 
       return {
-        name: product.name,
-        quantity: item.qty.toString(),
+        name: String(product.title || product.name || product.id).slice(0, 120),
+        quantity: qty.toString(),
+        note: optionText || undefined,
         base_price_money: {
-          amount: product.price,
+          amount: priceCents,
           currency: "USD"
         }
       };
     });
 
+    const shippingCents = getShippingCents(subtotalCents);
+
+    if (shippingCents > 0) {
+      line_items.push({
+        name: "Shipping",
+        quantity: "1",
+        note: "Flat rate shipping",
+        base_price_money: {
+          amount: shippingCents,
+          currency: "USD"
+        }
+      });
+    }
+
     const response = await fetch("https://connect.squareup.com/v2/online-checkout/payment-links", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.SQUARE_ACCESS_TOKEN}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Square-Version": "2024-12-18"
       },
       body: JSON.stringify({
-        idempotency_key: Date.now().toString(),
+        idempotency_key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
         order: {
           location_id: process.env.SQUARE_LOCATION_ID,
           line_items
+        },
+        checkout_options: {
+          ask_for_shipping_address: true,
+          redirect_url: "https://www.mylesbowlingsystems.com/ordercomplete.html"
         }
       })
     });
 
     const data = await response.json();
 
+    if (!response.ok) {
+      console.error("Square API error:", data);
+      return {
+        statusCode: response.status,
+        headers,
+        body: JSON.stringify({
+          error:
+            data?.errors?.[0]?.detail ||
+            data?.errors?.[0]?.code ||
+            "Square checkout failed",
+          square: data
+        })
+      };
+    }
+
+    const url = data?.payment_link?.url;
+
+    if (!url) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: "Square did not return a checkout URL",
+          square: data
+        })
+      };
+    }
+
     return {
       statusCode: 200,
-      body: JSON.stringify({
-        checkoutUrl: data.payment_link.url
-      })
+      headers,
+      body: JSON.stringify({ url })
     };
 
   } catch (err) {
-    console.error(err);
+    console.error("Checkout function error:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Checkout failed" })
+      headers,
+      body: JSON.stringify({
+        error: err.message || "Checkout failed"
+      })
     };
   }
 };
